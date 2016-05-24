@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app.sync;
+package com.example.android.sunshine.app.data.sync;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
@@ -27,11 +27,11 @@ import android.support.v4.app.TaskStackBuilder;
 import android.text.format.Time;
 import android.util.Log;
 
-import com.example.android.sunshine.app.BuildConfig;
-import com.example.android.sunshine.app.MainActivity;
+import com.example.android.sunshine.app.main.MainActivity;
 import com.example.android.sunshine.app.R;
-import com.example.android.sunshine.app.Utility;
-import com.example.android.sunshine.app.data.WeatherContract;
+import com.example.android.sunshine.app.util.SharedPrefUtils;
+import com.example.android.sunshine.app.data.provider.WeatherContract;
+import com.example.android.sunshine.app.util.WeatherUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -75,7 +75,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle extras, String authority, ContentProviderClient provider, SyncResult syncResult) {
         Log.d(LOG_TAG, "Starting sync");
-        String locationQuery = Utility.getPreferredLocation(getContext());
+        String locationQuery = SharedPrefUtils.getPreferredLocation(getContext());
 
         // These two need to be declared outside the try/catch
         // so that they can be closed in the finally block.
@@ -329,7 +329,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
             if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
                 // Last sync was more than 1 day ago, let's send a notification with the weather.
-                String locationQuery = Utility.getPreferredLocation(context);
+                String locationQuery = SharedPrefUtils.getPreferredLocation(context);
 
                 Uri weatherUri = WeatherContract.WeatherEntry.buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
 
@@ -342,17 +342,17 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     double low = cursor.getDouble(INDEX_MIN_TEMP);
                     String desc = cursor.getString(INDEX_SHORT_DESC);
 
-                    int iconId = Utility.getIconResourceForWeatherCondition(weatherId);
+                    int iconId = WeatherUtils.getIconResourceForWeatherCondition(weatherId);
                     Resources resources = context.getResources();
                     Bitmap largeIcon = BitmapFactory.decodeResource(resources,
-                            Utility.getArtResourceForWeatherCondition(weatherId));
+                            WeatherUtils.getArtResourceForWeatherCondition(weatherId));
                     String title = context.getString(R.string.app_name);
 
                     // Define the text of the forecast.
                     String contentText = String.format(context.getString(R.string.format_notification),
                             desc,
-                            Utility.formatTemperature(context, high),
-                            Utility.formatTemperature(context, low));
+                            SharedPrefUtils.formatTemperature(context, high),
+                            SharedPrefUtils.formatTemperature(context, low));
 
                     // NotificationCompatBuilder is a very convenient way to build backward-compatible
                     // notifications.  Just throw in some data.

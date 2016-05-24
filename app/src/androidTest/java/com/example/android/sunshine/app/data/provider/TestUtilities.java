@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app.data;
+package com.example.android.sunshine.app.data.provider;
 
 import android.content.ContentValues;
 import android.content.Context;

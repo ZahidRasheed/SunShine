@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sunshine.app;
+package com.example.android.sunshine.app.main;
 
 import android.content.Intent;
 import android.database.Cursor;
@@ -33,8 +33,10 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.example.android.sunshine.app.data.WeatherContract;
-import com.example.android.sunshine.app.sync.SunshineSyncAdapter;
+import com.example.android.sunshine.app.R;
+import com.example.android.sunshine.app.data.provider.WeatherContract;
+import com.example.android.sunshine.app.data.sync.SunshineSyncAdapter;
+import com.example.android.sunshine.app.util.SharedPrefUtils;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -153,7 +155,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 // if it cannot seek to that position.
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
-                    String locationSetting = Utility.getPreferredLocation(getActivity());
+                    String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity());
                     ((Callback) getActivity())
                             .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(COL_WEATHER_DATE)
@@ -240,7 +242,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         // Sort order:  Ascending, by date.
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
 
-        String locationSetting = Utility.getPreferredLocation(getActivity());
+        String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity());
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, System.currentTimeMillis());
 
