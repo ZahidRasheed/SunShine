@@ -52,7 +52,7 @@
             android:syncable="true" />
 
         <!-- SyncAdapter's dummy authentication service -->
-        <service android:name=".data.data.SunshineAuthenticatorService">
+        <service android:name=".data.sync.SunshineAuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -63,7 +63,7 @@
 
         <!-- The SyncAdapter service -->
         <service
-            android:name=".data.data.SunshineSyncService"
+            android:name=".data.sync.SunshineSyncService"
             android:exported="true"
             >
             <intent-filter>
