@@ -337,6 +337,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(logging)
+                .addNetworkInterceptor(new StethoInterceptor())
                 .addInterceptor(new Interceptor() {
                     @Override
                     public okhttp3.Response intercept(Chain chain) throws IOException {
