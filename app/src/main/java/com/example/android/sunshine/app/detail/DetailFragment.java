@@ -16,6 +16,7 @@
 package com.example.android.sunshine.app.detail;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,11 +36,14 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.sunshine.app.R;
+import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.provider.WeatherContract;
 import com.example.android.sunshine.app.data.provider.WeatherContract.WeatherEntry;
 import com.example.android.sunshine.app.util.DateUtils;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -54,7 +58,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
 
     private static final String FORECAST_SHARE_HASHTAG = " #SunshineApp";
 
+    //TODO: #Dagger this should be injected?
     private ShareActionProvider mShareActionProvider;
+    @Inject
+    SharedPreferences sharedPreferences;
+
     private String mForecast;
     private Uri mUri;
 
@@ -116,13 +124,15 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        ((SunshineApplication) getActivity().getApplication()).getNetComponent().inject(this);
+
         Bundle arguments = getArguments();
         if (arguments != null) {
             mUri = arguments.getParcelable(DetailFragment.DETAIL_URI);
         }
 
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
-        ButterKnife.bind(this,rootView);
+        ButterKnife.bind(this, rootView);
         return rootView;
     }
 
@@ -209,15 +219,15 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             mIconView.setContentDescription(description);
 
             // Read high temperature from cursor and update view
-            boolean isMetric = SharedPrefUtils.isMetric(getActivity());
+            boolean isMetric = SharedPrefUtils.isMetric(getActivity(), sharedPreferences);
 
             double high = data.getDouble(COL_WEATHER_MAX_TEMP);
-            String highString = SharedPrefUtils.formatTemperature(getActivity(), high);
+            String highString = SharedPrefUtils.formatTemperature(getActivity(), sharedPreferences, high);
             mHighTempView.setText(highString);
 
             // Read low temperature from cursor and update view
             double low = data.getDouble(COL_WEATHER_MIN_TEMP);
-            String lowString = SharedPrefUtils.formatTemperature(getActivity(), low);
+            String lowString = SharedPrefUtils.formatTemperature(getActivity(), sharedPreferences, low);
             mLowTempView.setText(lowString);
 
             // Read humidity from cursor and update view
@@ -227,7 +237,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             // Read wind speed and direction from cursor and update view
             float windSpeedStr = data.getFloat(COL_WEATHER_WIND_SPEED);
             float windDirStr = data.getFloat(COL_WEATHER_DEGREES);
-            mWindView.setText(WeatherUtils.getFormattedWind(getActivity(), windSpeedStr, windDirStr));
+            mWindView.setText(WeatherUtils.getFormattedWind(getActivity(), windSpeedStr, windDirStr,
+                    sharedPreferences));
 
             // Read pressure from cursor and update view
             float pressure = data.getFloat(COL_WEATHER_PRESSURE);

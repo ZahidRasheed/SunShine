@@ -16,6 +16,7 @@
 package com.example.android.sunshine.app.main;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -34,9 +35,12 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import com.example.android.sunshine.app.R;
+import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.provider.WeatherContract;
 import com.example.android.sunshine.app.data.sync.SunshineSyncAdapter;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
+
+import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -50,6 +54,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     @Bind(R.id.listview_forecast)
     ListView mListView;
+
+    @Inject
+    SharedPreferences sharedPreferences;
 
     private int mPosition = ListView.INVALID_POSITION;
     private boolean mUseTodayLayout;
@@ -107,6 +114,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ((SunshineApplication) getActivity().getApplication()).getNetComponent().inject(this);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
     }
@@ -155,7 +164,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 // if it cannot seek to that position.
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
-                    String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity());
+                    String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity(),
+                            sharedPreferences);
                     ((Callback) getActivity())
                             .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(COL_WEATHER_DATE)
@@ -242,7 +252,8 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         // Sort order:  Ascending, by date.
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
 
-        String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity());
+        String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity(),
+                sharedPreferences);
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, System.currentTimeMillis());
 

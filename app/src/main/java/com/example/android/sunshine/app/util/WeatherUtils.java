@@ -1,16 +1,14 @@
 package com.example.android.sunshine.app.util;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.example.android.sunshine.app.R;
-
-/**
- * Created by zra on 24/05/16.
- */
 public class WeatherUtils {
-    public static String getFormattedWind(Context context, float windSpeed, float degrees) {
+    public static String getFormattedWind(Context context, float windSpeed, float degrees,
+                                          SharedPreferences sharedPreferences) {
         int windFormat;
-        if (SharedPrefUtils.isMetric(context)) {
+        if (SharedPrefUtils.isMetric(context,sharedPreferences)) {
             windFormat = R.string.format_wind_kmh;
         } else {
             windFormat = R.string.format_wind_mph;

@@ -21,13 +21,13 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.text.format.Time;
 import android.util.Log;
 
 import com.example.android.sunshine.app.R;
+import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.api.AppApiService;
 import com.example.android.sunshine.app.data.entity.WeatherResponseEntity;
 import com.example.android.sunshine.app.data.mapper.WeatherMapper;
@@ -37,26 +37,25 @@ import com.example.android.sunshine.app.domain.model.Weather;
 import com.example.android.sunshine.app.main.MainActivity;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
-import com.facebook.stetho.okhttp3.StethoInterceptor;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
-import java.io.IOException;
 import java.util.Vector;
 
-import okhttp3.HttpUrl;
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.logging.HttpLoggingInterceptor;
+import javax.inject.Inject;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
+    @Inject
+    Retrofit retrofit;
+
+    @Inject
+    SharedPreferences sharedPreferences;
+
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
+
     // Interval at which to sync with the weather, in seconds.
     // 60 seconds (1 minute) * 180 = 3 hours
     public static final int SYNC_INTERVAL = 60 * 180;
@@ -79,6 +78,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public SunshineSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
+        ((SunshineApplication) context.getApplicationContext()).getNetComponent().inject(this);
     }
 
     @Override
@@ -92,19 +92,18 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     private void notifyWeather() {
         Context context = getContext();
         //checking the last update and notify if it' the first of the day
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String displayNotificationsKey = context.getString(R.string.pref_enable_notifications_key);
-        boolean displayNotifications = prefs.getBoolean(displayNotificationsKey,
+        boolean displayNotifications = sharedPreferences.getBoolean(displayNotificationsKey,
                 Boolean.parseBoolean(context.getString(R.string.pref_enable_notifications_default)));
 
         if (displayNotifications) {
 
             String lastNotificationKey = context.getString(R.string.pref_last_notification);
-            long lastSync = prefs.getLong(lastNotificationKey, 0);
+            long lastSync = sharedPreferences.getLong(lastNotificationKey, 0);
 
             if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
                 // Last sync was more than 1 day ago, let's send a notification with the weather.
-                String locationQuery = SharedPrefUtils.getPreferredLocation(context);
+                String locationQuery = SharedPrefUtils.getPreferredLocation(context, sharedPreferences);
 
                 Uri weatherUri = WeatherContract.WeatherEntry.
                         buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
@@ -128,8 +127,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     // Define the text of the forecast.
                     String contentText = String.format(context.getString(R.string.format_notification),
                             desc,
-                            SharedPrefUtils.formatTemperature(context, high),
-                            SharedPrefUtils.formatTemperature(context, low));
+                            SharedPrefUtils.formatTemperature(context, sharedPreferences, high),
+                            SharedPrefUtils.formatTemperature(context, sharedPreferences, low));
 
                     // NotificationCompatBuilder is a very convenient way to build backward-compatible
                     // notifications.  Just throw in some data.
@@ -165,7 +164,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
 
                     //refreshing last sync
-                    SharedPreferences.Editor editor = prefs.edit();
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.putLong(lastNotificationKey, System.currentTimeMillis());
                     editor.commit();
                 }
@@ -320,41 +319,11 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     //Todo: This should be a use case instead. RxJava? Dependency Injection?
     private void syncRetrofitWay() {
-        final String locationQuery = SharedPrefUtils.getPreferredLocation(getContext());
+        final String locationQuery = SharedPrefUtils.getPreferredLocation(getContext(),
+                sharedPreferences);
 
         String BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/";
         final String apiKey = "f2e9402f119e8f6f214017b3d3502620";
-
-        //Gson configuration, if required.
-        Gson gson = new GsonBuilder()
-                //.setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-                .create();
-
-        //TODO: Logging should only happen in the debug version of application.
-        //Add an api key for all calls or configuration for okHttpClient.
-        final HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .addInterceptor(logging)
-                .addNetworkInterceptor(new StethoInterceptor())
-                .addInterceptor(new Interceptor() {
-                    @Override
-                    public okhttp3.Response intercept(Chain chain) throws IOException {
-                        final HttpUrl modifiedUrl = chain.request().url().newBuilder()
-                                .addQueryParameter("APPID", apiKey)
-                                .build();
-                        final Request request = chain.request().newBuilder().url(modifiedUrl).build();
-                        return chain.proceed(request);
-                    }
-                })
-                .build();
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .client(okHttpClient)
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build();
 
         AppApiService service = retrofit.create(AppApiService.class);
         Call<WeatherResponseEntity> repos = service.getDailyForecast(
@@ -366,7 +335,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
             @Override
             public void onResponse(Call<WeatherResponseEntity> call,
                                    Response<WeatherResponseEntity> response) {
-                Log.e(LOG_TAG, "onResponse: received " + response.body().toString());
+                //Log.e(LOG_TAG, "onResponse: received " + response.body().toString());
 
                 WeatherMapper weatherMapper = new WeatherMapper();
                 Weather[] weatherArray = weatherMapper.mapResponse(response.body().getForecastList());

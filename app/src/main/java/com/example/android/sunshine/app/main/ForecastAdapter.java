@@ -1,6 +1,7 @@
 package com.example.android.sunshine.app.main;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
@@ -10,9 +11,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.android.sunshine.app.R;
+import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.util.DateUtils;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
+
+import javax.inject.Inject;
 
 /**
  * {@link ForecastAdapter} exposes a list of weather forecasts
@@ -26,6 +30,9 @@ public class ForecastAdapter extends CursorAdapter {
 
     // Flag to determine if we want to use a separate view for "today".
     private boolean mUseTodayLayout = true;
+
+    @Inject
+    public SharedPreferences sharedPreferences;
 
     /**
      * Cache of the children views for a forecast list item.
@@ -48,6 +55,7 @@ public class ForecastAdapter extends CursorAdapter {
 
     public ForecastAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
+        ((SunshineApplication) context.getApplicationContext()).getNetComponent().inject(this);
     }
 
     @Override
@@ -109,15 +117,15 @@ public class ForecastAdapter extends CursorAdapter {
         viewHolder.iconView.setContentDescription(description);
 
         // Read user preference for metric or imperial temperature units
-        boolean isMetric = SharedPrefUtils.isMetric(context);
+        boolean isMetric = SharedPrefUtils.isMetric(context, sharedPreferences);
 
         // Read high temperature from cursor
         double high = cursor.getDouble(ForecastFragment.COL_WEATHER_MAX_TEMP);
-        viewHolder.highTempView.setText(SharedPrefUtils.formatTemperature(context, high));
+        viewHolder.highTempView.setText(SharedPrefUtils.formatTemperature(context, sharedPreferences, high));
 
         // Read low temperature from cursor
         double low = cursor.getDouble(ForecastFragment.COL_WEATHER_MIN_TEMP);
-        viewHolder.lowTempView.setText(SharedPrefUtils.formatTemperature(context, low));
+        viewHolder.lowTempView.setText(SharedPrefUtils.formatTemperature(context, sharedPreferences, low));
     }
 
     public void setUseTodayLayout(boolean useTodayLayout) {

@@ -17,29 +17,28 @@ package com.example.android.sunshine.app.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 import com.example.android.sunshine.app.R;
 
 public class SharedPrefUtils {
-    public static String getPreferredLocation(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+    public static String getPreferredLocation(Context context, SharedPreferences prefs) {
         return prefs.getString(context.getString(R.string.pref_location_key),
                 context.getString(R.string.pref_location_default));
     }
 
-    public static boolean isMetric(Context context) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+    public static boolean isMetric(Context context, SharedPreferences prefs) {
         return prefs.getString(context.getString(R.string.pref_units_key),
                 context.getString(R.string.pref_units_metric))
                 .equals(context.getString(R.string.pref_units_metric));
     }
 
-    public static String formatTemperature(Context context, double temperature) {
+    public static String formatTemperature(Context context, SharedPreferences prefs,
+                                           double temperature) {
         // Data stored in Celsius by default.  If user prefers to see in Fahrenheit, convert
         // the values here.
         String suffix = "\u00B0";
-        if (!isMetric(context)) {
+        if (!isMetric(context, prefs)) {
             temperature = (temperature * 1.8) + 32;
         }
 
