@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.android.sunshine.app" >
+    package="com.zahidrasheed.sunshine.app" >
 
     <!-- This permission is necessary in order for Sunshine to perform network access. -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -14,13 +14,13 @@
         android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
 
     <application
-        android:name=".SunshineApplication"
+        android:name="com.zahidrasheed.sunshine.app.SunshineApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".ui.main.MainActivity"
+            android:name="com.zahidrasheed.sunshine.app.ui.main.MainActivity"
             android:theme="@style/ForecastTheme"
             android:label="@string/app_name" >
             <intent-filter>
@@ -30,30 +30,30 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.detail.DetailActivity"
+            android:name="com.zahidrasheed.sunshine.app.ui.detail.DetailActivity"
             android:label="@string/title_activity_detail"
-            android:parentActivityName=".ui.main.MainActivity" >
+            android:parentActivityName="com.zahidrasheed.sunshine.app.ui.main.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.main.MainActivity" />
+                android:value="com.zahidrasheed.sunshine.app.ui.main.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.settings.SettingsActivity"
+            android:name="com.zahidrasheed.sunshine.app.ui.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ui.main.MainActivity"
+            android:parentActivityName="com.zahidrasheed.sunshine.app.ui.main.MainActivity"
             android:theme="@style/SettingsTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.main.MainActivity" />
+                android:value="com.zahidrasheed.sunshine.app.ui.main.MainActivity" />
         </activity>
         <provider
             android:authorities="@string/content_authority"
-            android:name=".data.provider.WeatherProvider"
+            android:name="com.zahidrasheed.sunshine.app.data.provider.WeatherProvider"
             android:exported="false"
             android:syncable="true" />
 
         <!-- SyncAdapter's dummy authentication service -->
-        <service android:name=".data.sync.SunshineAuthenticatorService">
+        <service android:name="com.zahidrasheed.sunshine.app.data.sync.SunshineAuthenticatorService">
             <intent-filter>
                 <action android:name="android.accounts.AccountAuthenticator" />
             </intent-filter>
@@ -64,7 +64,7 @@
 
         <!-- The SyncAdapter service -->
         <service
-            android:name=".data.sync.SunshineSyncService"
+            android:name="com.zahidrasheed.sunshine.app.data.sync.SunshineSyncService"
             android:exported="true"
             >
             <intent-filter>
