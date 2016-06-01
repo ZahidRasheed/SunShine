@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app;
+package com.example.android.sunshine.app.internal.di.modules;
 
 import android.app.Application;
 

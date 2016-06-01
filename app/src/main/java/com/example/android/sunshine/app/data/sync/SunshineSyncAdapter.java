@@ -30,11 +30,11 @@ import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.api.AppApiService;
 import com.example.android.sunshine.app.data.entity.WeatherResponseEntity;
-import com.example.android.sunshine.app.data.mapper.WeatherMapper;
+import com.example.android.sunshine.app.data.entity.mapper.WeatherResponseMapper;
 import com.example.android.sunshine.app.data.provider.WeatherContract;
 import com.example.android.sunshine.app.domain.model.Location;
 import com.example.android.sunshine.app.domain.model.Weather;
-import com.example.android.sunshine.app.main.MainActivity;
+import com.example.android.sunshine.app.ui.main.MainActivity;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
 
@@ -45,14 +45,13 @@ import javax.inject.Inject;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
 
 public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     @Inject
-    Retrofit retrofit;
+    AppApiService mAppApiService;
 
     @Inject
-    SharedPreferences sharedPreferences;
+    SharedPreferences mSharedPreferences;
 
     public final String LOG_TAG = SunshineSyncAdapter.class.getSimpleName();
 
@@ -78,7 +77,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
 
     public SunshineSyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
-        ((SunshineApplication) context.getApplicationContext()).getNetComponent().inject(this);
+        SunshineApplication.getComponent(context).inject(this);
     }
 
     @Override
@@ -93,17 +92,17 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
         Context context = getContext();
         //checking the last update and notify if it' the first of the day
         String displayNotificationsKey = context.getString(R.string.pref_enable_notifications_key);
-        boolean displayNotifications = sharedPreferences.getBoolean(displayNotificationsKey,
+        boolean displayNotifications = mSharedPreferences.getBoolean(displayNotificationsKey,
                 Boolean.parseBoolean(context.getString(R.string.pref_enable_notifications_default)));
 
         if (displayNotifications) {
 
             String lastNotificationKey = context.getString(R.string.pref_last_notification);
-            long lastSync = sharedPreferences.getLong(lastNotificationKey, 0);
+            long lastSync = mSharedPreferences.getLong(lastNotificationKey, 0);
 
             if (System.currentTimeMillis() - lastSync >= DAY_IN_MILLIS) {
                 // Last sync was more than 1 day ago, let's send a notification with the weather.
-                String locationQuery = SharedPrefUtils.getPreferredLocation(context, sharedPreferences);
+                String locationQuery = SharedPrefUtils.getPreferredLocation(context, mSharedPreferences);
 
                 Uri weatherUri = WeatherContract.WeatherEntry.
                         buildWeatherLocationWithDate(locationQuery, System.currentTimeMillis());
@@ -127,8 +126,8 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     // Define the text of the forecast.
                     String contentText = String.format(context.getString(R.string.format_notification),
                             desc,
-                            SharedPrefUtils.formatTemperature(context, sharedPreferences, high),
-                            SharedPrefUtils.formatTemperature(context, sharedPreferences, low));
+                            SharedPrefUtils.formatTemperature(context, mSharedPreferences, high),
+                            SharedPrefUtils.formatTemperature(context, mSharedPreferences, low));
 
                     // NotificationCompatBuilder is a very convenient way to build backward-compatible
                     // notifications.  Just throw in some data.
@@ -164,7 +163,7 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                     mNotificationManager.notify(WEATHER_NOTIFICATION_ID, mBuilder.build());
 
                     //refreshing last sync
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    SharedPreferences.Editor editor = mSharedPreferences.edit();
                     editor.putLong(lastNotificationKey, System.currentTimeMillis());
                     editor.commit();
                 }
@@ -320,13 +319,12 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
     //Todo: This should be a use case instead. RxJava? Dependency Injection?
     private void syncRetrofitWay() {
         final String locationQuery = SharedPrefUtils.getPreferredLocation(getContext(),
-                sharedPreferences);
+                mSharedPreferences);
 
         String BASE_URL = "http://api.openweathermap.org/data/2.5/forecast/";
         final String apiKey = "f2e9402f119e8f6f214017b3d3502620";
 
-        AppApiService service = retrofit.create(AppApiService.class);
-        Call<WeatherResponseEntity> repos = service.getDailyForecast(
+        Call<WeatherResponseEntity> repos = mAppApiService.getDailyForecast(
                 "Copenhagen", "json", "metric", "15"
         );
 
@@ -337,9 +335,9 @@ public class SunshineSyncAdapter extends AbstractThreadedSyncAdapter {
                                    Response<WeatherResponseEntity> response) {
                 //Log.e(LOG_TAG, "onResponse: received " + response.body().toString());
 
-                WeatherMapper weatherMapper = new WeatherMapper();
-                Weather[] weatherArray = weatherMapper.mapResponse(response.body().getForecastList());
-                Location location = weatherMapper.mapResponse(response.body().getCity());
+                WeatherResponseMapper weatherResponseMapper = new WeatherResponseMapper();
+                Weather[] weatherArray = weatherResponseMapper.mapResponse(response.body().getForecastList());
+                Location location = weatherResponseMapper.mapResponse(response.body().getCity());
 
                 long locationId = addLocation(locationQuery, location);
 

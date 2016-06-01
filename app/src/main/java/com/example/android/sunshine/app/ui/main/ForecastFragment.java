@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sunshine.app.main;
+package com.example.android.sunshine.app.ui.main;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,6 +38,9 @@ import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.provider.WeatherContract;
 import com.example.android.sunshine.app.data.sync.SunshineSyncAdapter;
+import com.example.android.sunshine.app.internal.di.components.DaggerActivityComponent;
+import com.example.android.sunshine.app.internal.di.modules.ActivityModule;
+import com.example.android.sunshine.app.ui.adapters.ForecastAdapter;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 
 import javax.inject.Inject;
@@ -56,7 +59,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     ListView mListView;
 
     @Inject
-    SharedPreferences sharedPreferences;
+    SharedPreferences mSharedPreferences;
 
     private int mPosition = ListView.INVALID_POSITION;
     private boolean mUseTodayLayout;
@@ -86,15 +89,15 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
     // These indices are tied to FORECAST_COLUMNS.  If FORECAST_COLUMNS changes, these
     // must change.
-    static final int COL_WEATHER_ID = 0;
-    static final int COL_WEATHER_DATE = 1;
-    static final int COL_WEATHER_DESC = 2;
-    static final int COL_WEATHER_MAX_TEMP = 3;
-    static final int COL_WEATHER_MIN_TEMP = 4;
-    static final int COL_LOCATION_SETTING = 5;
-    static final int COL_WEATHER_CONDITION_ID = 6;
-    static final int COL_COORD_LAT = 7;
-    static final int COL_COORD_LONG = 8;
+    public static final int COL_WEATHER_ID = 0;
+    public static final int COL_WEATHER_DATE = 1;
+    public static final int COL_WEATHER_DESC = 2;
+    public static final int COL_WEATHER_MAX_TEMP = 3;
+    public static final int COL_WEATHER_MIN_TEMP = 4;
+    public static final int COL_LOCATION_SETTING = 5;
+    public static final int COL_WEATHER_CONDITION_ID = 6;
+    public static final int COL_COORD_LAT = 7;
+    public static final int COL_COORD_LONG = 8;
 
     /**
      * A callback interface that all activities containing this fragment must
@@ -114,8 +117,12 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        (DaggerActivityComponent.builder()
+                .appComponent(SunshineApplication.getComponent(getActivity()))
+                .activityModule(new ActivityModule())
+                .build()
+        ).inject(this);
 
-        ((SunshineApplication) getActivity().getApplication()).getNetComponent().inject(this);
         // Add this line in order for this fragment to handle menu events.
         setHasOptionsMenu(true);
     }
@@ -165,7 +172,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 Cursor cursor = (Cursor) adapterView.getItemAtPosition(position);
                 if (cursor != null) {
                     String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity(),
-                            sharedPreferences);
+                            mSharedPreferences);
                     ((Callback) getActivity())
                             .onItemSelected(WeatherContract.WeatherEntry.buildWeatherLocationWithDate(
                                     locationSetting, cursor.getLong(COL_WEATHER_DATE)
@@ -253,7 +260,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATE + " ASC";
 
         String locationSetting = SharedPrefUtils.getPreferredLocation(getActivity(),
-                sharedPreferences);
+                mSharedPreferences);
         Uri weatherForLocationUri = WeatherContract.WeatherEntry.buildWeatherLocationWithStartDate(
                 locationSetting, System.currentTimeMillis());
 

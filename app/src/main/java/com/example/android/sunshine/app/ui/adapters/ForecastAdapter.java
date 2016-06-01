@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app.main;
+package com.example.android.sunshine.app.ui.adapters;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -12,6 +12,9 @@ import android.widget.TextView;
 
 import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.SunshineApplication;
+import com.example.android.sunshine.app.internal.di.components.DaggerActivityComponent;
+import com.example.android.sunshine.app.internal.di.modules.ActivityModule;
+import com.example.android.sunshine.app.ui.main.ForecastFragment;
 import com.example.android.sunshine.app.util.DateUtils;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
@@ -55,9 +58,12 @@ public class ForecastAdapter extends CursorAdapter {
 
     public ForecastAdapter(Context context, Cursor c, int flags) {
         super(context, c, flags);
-        ((SunshineApplication) context.getApplicationContext()).getNetComponent().inject(this);
+                (DaggerActivityComponent.builder()
+                .appComponent(SunshineApplication.getComponent(context))
+                .activityModule(new ActivityModule())
+                .build()
+        ).inject(this);
     }
-
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         // Choose the layout type

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sunshine.app.main;
+package com.example.android.sunshine.app.ui.main;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -26,9 +26,11 @@ import android.view.MenuItem;
 import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.sync.SunshineSyncAdapter;
-import com.example.android.sunshine.app.detail.DetailActivity;
-import com.example.android.sunshine.app.detail.DetailFragment;
-import com.example.android.sunshine.app.settings.SettingsActivity;
+import com.example.android.sunshine.app.internal.di.components.DaggerActivityComponent;
+import com.example.android.sunshine.app.internal.di.modules.ActivityModule;
+import com.example.android.sunshine.app.ui.detail.DetailActivity;
+import com.example.android.sunshine.app.ui.detail.DetailFragment;
+import com.example.android.sunshine.app.ui.settings.SettingsActivity;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 
 import javax.inject.Inject;
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
 
     private boolean mTwoPane;
     private String mLocation;
+
     @Inject
     SharedPreferences sharedPreferences;
 
@@ -47,8 +50,11 @@ public class MainActivity extends AppCompatActivity implements ForecastFragment.
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // assign singleton instances to fields
-        ((SunshineApplication) getApplication()).getNetComponent().inject(this);
+        (DaggerActivityComponent.builder()
+                .appComponent(SunshineApplication.getComponent(this))
+                .activityModule(new ActivityModule())
+                .build()
+        ).inject(this);
 
         mLocation = SharedPrefUtils.getPreferredLocation(this, sharedPreferences);
 

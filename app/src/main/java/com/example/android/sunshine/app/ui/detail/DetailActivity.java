@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sunshine.app.detail;
+package com.example.android.sunshine.app.ui.detail;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,7 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.android.sunshine.app.R;
-import com.example.android.sunshine.app.settings.SettingsActivity;
+import com.example.android.sunshine.app.ui.settings.SettingsActivity;
 
 public class DetailActivity extends AppCompatActivity {
 

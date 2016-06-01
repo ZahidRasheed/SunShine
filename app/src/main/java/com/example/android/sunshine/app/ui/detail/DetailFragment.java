@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.sunshine.app.detail;
+package com.example.android.sunshine.app.ui.detail;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -39,6 +39,8 @@ import com.example.android.sunshine.app.R;
 import com.example.android.sunshine.app.SunshineApplication;
 import com.example.android.sunshine.app.data.provider.WeatherContract;
 import com.example.android.sunshine.app.data.provider.WeatherContract.WeatherEntry;
+import com.example.android.sunshine.app.internal.di.components.DaggerActivityComponent;
+import com.example.android.sunshine.app.internal.di.modules.ActivityModule;
 import com.example.android.sunshine.app.util.DateUtils;
 import com.example.android.sunshine.app.util.SharedPrefUtils;
 import com.example.android.sunshine.app.util.WeatherUtils;
@@ -124,7 +126,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        ((SunshineApplication) getActivity().getApplication()).getNetComponent().inject(this);
+        (DaggerActivityComponent.builder()
+                .appComponent(SunshineApplication.getComponent(getActivity()))
+                .activityModule(new ActivityModule())
+                .build()
+        ).inject(this);
 
         Bundle arguments = getArguments();
         if (arguments != null) {

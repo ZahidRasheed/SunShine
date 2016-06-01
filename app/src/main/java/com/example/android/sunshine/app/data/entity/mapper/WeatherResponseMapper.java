@@ -1,4 +1,4 @@
-package com.example.android.sunshine.app.data.mapper;
+package com.example.android.sunshine.app.data.entity.mapper;
 
 import android.support.annotation.NonNull;
 
@@ -6,9 +6,9 @@ import com.example.android.sunshine.app.data.entity.WeatherResponseEntity;
 import com.example.android.sunshine.app.domain.model.Location;
 import com.example.android.sunshine.app.domain.model.Weather;
 
-public class WeatherMapper {
+public class WeatherResponseMapper {
 
-    public WeatherMapper() {
+    public WeatherResponseMapper() {
     }
 
     public Weather[] mapResponse(@NonNull WeatherResponseEntity.ForecastList response[]) {

@@ -1,9 +1,6 @@
-package com.example.android.sunshine.app;
+package com.example.android.sunshine.app.internal.di.modules;
 
-import android.app.Application;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
+import com.example.android.sunshine.app.data.api.AppApiService;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -33,13 +30,6 @@ public class NetModule {
     }
 
     // Dagger will only look for methods annotated with @Provides
-
-    @Provides
-    @Singleton
-    // Application reference must come from AppModule.class
-    SharedPreferences providesSharedPreferences(Application application) {
-        return PreferenceManager.getDefaultSharedPreferences(application);
-    }
 
     @Provides
     @Singleton
@@ -83,5 +73,11 @@ public class NetModule {
                 .client(okHttpClient)
                 .build();
         return retrofit;
+    }
+
+    @Provides
+    @Singleton
+    public AppApiService provideAppApiService(Retrofit retrofit) {
+        return retrofit.create(AppApiService.class);
     }
 }
